@@ -63,13 +63,13 @@ body { font-family:'Helvetica Neue',Arial,'Hiragino Sans',sans-serif; background
   <div class="done-icon">✅</div>
   <div class="done-msg">登録完了！</div>
   <div class="done-sub">
-    ありがとうございます。<br>
-    LINE友だち追加がまだの方は<br>
-    ぜひ追加をお願いします！
+    ありがとうございます！<br>
+    友だち追加画面へ移動します...
   </div>
   <button class="btn btn-primary" style="margin-top:24px;" onclick="addFriend()">
     友だち追加する
   </button>
+  <div style="margin-top:8px;font-size:12px;color:#aaa;">自動で移動しない場合はボタンを押してください</div>
 </div>
 
 <!-- エラー画面 -->
@@ -173,6 +173,8 @@ function doRegister() {
     if (result.success) {
       document.getElementById('register-view').classList.add('hidden');
       document.getElementById('done-view').classList.remove('hidden');
+      // 1.5秒後に自動で友だち追加ページへ
+      setTimeout(function() { addFriend(); }, 1500);
     } else {
       showError('登録エラー', result.message || '登録に失敗しました');
     }
