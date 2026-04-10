@@ -171,10 +171,7 @@ function doRegister() {
   .then(function(res) { return res.json(); })
   .then(function(result) {
     if (result.success) {
-      document.getElementById('register-view').classList.add('hidden');
-      document.getElementById('done-view').classList.remove('hidden');
-      // 1.5秒後に自動で友だち追加ページへ
-      setTimeout(function() { addFriend(); }, 1500);
+      addFriend();
     } else {
       showError('登録エラー', result.message || '登録に失敗しました');
     }
