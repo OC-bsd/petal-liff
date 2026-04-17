@@ -275,7 +275,11 @@
 
       var html = '<div class="coupon-type-wrap">';
       html += '<div class="coupon-type-label">PREMIUM OFFER</div>';
-      html += '<div class="coupon-type">' + escapeHtml(couponData.couponType) + '</div>';
+      var typeDisplay = couponData.couponType;
+      if (typeDisplay && typeDisplay.indexOf('選択式') >= 0) {
+        typeDisplay = '選択式\n本指名無料\nor\n60分3900円';
+      }
+      html += '<div class="coupon-type">' + escapeHtml(typeDisplay).replace(/\\n/g, '<br>') + '</div>';
       html += '</div>';
       html += '<div class="coupon-id">ID: ' + escapeHtml(couponData.couponId) + '</div>';
       html += '<div class="info-row"><span class="label">CATEGORY</span><span class="value">' + escapeHtml(couponData.trigger) + '</span></div>';
