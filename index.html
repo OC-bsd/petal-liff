@@ -112,9 +112,42 @@ var FRIEND_ADD_URL = 'https://line.me/R/ti/p/@axh2305k';
 var lineProfile = null;
 var liffReady = false;
 
-// QR番号をURLから取得（GitHub Pagesなら普通にsearchParamsで取れる）
-var params = new URLSearchParams(window.location.search);
-var QR_NUM = params.get('qr') || '0';
+// QR番号をURLから取得（LIFF経由のパラメータ対応）
+function getQrNum() {
+  var url = window.location.href;
+  var search = window.location.search || '';
+  var hash = window.location.hash || '';
+  var found = '';
+
+  // 1. searchから取得
+  var p = new URLSearchParams(search);
+  if (p.get('qr')) { found = p.get('qr'); }
+
+  // 2. liff.stateから取得（LIFFがパラメータをliff.stateに格納する場合）
+  if (!found) {
+    var ls = p.get('liff.state') || '';
+    if (ls) {
+      var m = decodeURIComponent(ls).match(/qr=([^&]*)/);
+      if (m) found = m[1];
+    }
+  }
+
+  // 3. hashから取得（LIFFはliff.stateとしてhashに入れることもある）
+  if (!found && hash) {
+    var decoded = decodeURIComponent(hash);
+    var m2 = decoded.match(/qr=([^&]*)/);
+    if (m2) found = m2[1];
+  }
+
+  // 4. href全体から最終手段で探す
+  if (!found) {
+    var m3 = url.match(/[?&#]qr=([^&#]*)/);
+    if (m3) found = m3[1];
+  }
+
+  return found || '0';
+}
+var QR_NUM = getQrNum();
 document.getElementById('qr-label').textContent = 'QR No.' + QR_NUM;
 
 // LIFF初期化
@@ -124,7 +157,12 @@ liff.init({ liffId: LIFF_ID }).then(function() {
   document.getElementById('status').textContent = 'ログイン確認中...';
   if (!liff.isLoggedIn()) {
     document.getElementById('status').textContent = 'LINEログインへ移動中...';
-    liff.login();
+    // ★ redirectUri にQR番号を含めてログイン後もパラメータを保持
+    var redirectBack = window.location.href;
+    if (QR_NUM && QR_NUM !== '0' && redirectBack.indexOf('qr=') === -1) {
+      redirectBack += (redirectBack.indexOf('?') >= 0 ? '&' : '?') + 'qr=' + QR_NUM;
+    }
+    liff.login({ redirectUri: redirectBack });
     return;
   }
   document.getElementById('status').textContent = 'プロフィール取得中...';
