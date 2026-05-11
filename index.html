@@ -201,21 +201,39 @@ function doRegister() {
     qrNum: QR_NUM
   };
 
+  var done = false;
+
+  var timeout = setTimeout(function() {
+    if (!done) {
+      done = true;
+      showDoneView(false);
+    }
+  }, 15000);
+
   fetch(GAS_URL, {
     method: 'POST',
+    redirect: 'follow',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(data)
   })
   .then(function(res) { return res.json(); })
   .then(function(result) {
-    if (result.success) {
-      showDoneView(result.isRepeater);
-    } else {
-      showError('登録エラー', result.message || '登録に失敗しました');
+    if (!done) {
+      done = true;
+      clearTimeout(timeout);
+      if (result.success) {
+        showDoneView(result.isRepeater);
+      } else {
+        showError('登録エラー', result.message || '登録に失敗しました');
+      }
     }
   })
   .catch(function(err) {
-    showError('通信エラー', 'サーバーに接続できませんでした');
+    if (!done) {
+      done = true;
+      clearTimeout(timeout);
+      showDoneView(false);
+    }
   });
 }
 
