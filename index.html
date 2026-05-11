@@ -230,7 +230,11 @@ function showDoneView(isRepeater) {
   }
 }
 function addFriend() {
-  window.location.href = FRIEND_ADD_URL;
+  if (liff.isInClient()) {
+    liff.openWindow({ url: FRIEND_ADD_URL, external: true });
+  } else {
+    window.location.href = FRIEND_ADD_URL;
+  }
 }
 
 function showPolicy() {
