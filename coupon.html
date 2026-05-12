@@ -202,9 +202,17 @@
     var params = new URLSearchParams(window.location.search);
     var liffState = params.get('liff.state') || '';
     var COUPON_ID = params.get('id') || '';
-    if (!COUPON_ID && liffState) {
-      var m = decodeURIComponent(liffState).match(/id=(CP[\w-]+)/);
-      if (m) COUPON_ID = m[1];
+    var COUPON_TYPE_PARAM = params.get('type') || '';
+    if (liffState) {
+      var decoded = decodeURIComponent(liffState);
+      if (!COUPON_ID) {
+        var m = decoded.match(/id=([^&]+)/);
+        if (m) COUPON_ID = m[1];
+      }
+      if (!COUPON_TYPE_PARAM) {
+        var mt = decoded.match(/type=([^&]+)/);
+        if (mt) COUPON_TYPE_PARAM = mt[1];
+      }
     }
 
     var selectedChoice = '';
@@ -216,14 +224,11 @@
     function initApp() {
       if (COUPON_LIFF_ID) {
         liff.init({ liffId: COUPON_LIFF_ID }).then(function() {
-          // ログインしてなくてもクーポン表示は可能。必要ならここでlogin
           fetchCouponInfo();
         }).catch(function(err) {
-          // LIFF初期化失敗してもクーポン表示は試みる
           fetchCouponInfo();
         });
       } else {
-        // LIFFなしでも動くフォールバック
         fetchCouponInfo();
       }
     }
@@ -239,7 +244,7 @@
       fetch(GAS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'couponInfo', couponId: COUPON_ID })
+        body: JSON.stringify({ action: 'couponInfo', couponId: COUPON_ID, type: COUPON_TYPE_PARAM })
       })
       .then(function(res) { return res.json(); })
       .then(function(result) {
@@ -285,7 +290,9 @@
       }
       html += '</div>';
       html += '<div class="coupon-id">ID: ' + escapeHtml(couponData.couponId) + '</div>';
-      html += '<div class="info-row"><span class="label">CATEGORY</span><span class="value">' + escapeHtml(couponData.trigger) + '</span></div>';
+      if (couponData.trigger && couponData.trigger !== '手動配布') {
+        html += '<div class="info-row"><span class="label">CATEGORY</span><span class="value">' + escapeHtml(couponData.trigger) + '</span></div>';
+      }
       html += '<div class="info-row"><span class="label">VALID UNTIL</span><span class="value">' + escapeHtml(couponData.expiresStr) + '</span></div>';
 
       var needChoice = (couponData.trigger === '2回目1st' || couponData.trigger === '2回目2nd');
@@ -322,7 +329,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
-          action: 'markCouponUsed',
+          action: COUPON_TYPE_PARAM === 'manual' ? 'markManualCouponUsed' : 'markCouponUsed',
           couponId: COUPON_ID,
           choice: selectedChoice
         })
